@@ -1,5 +1,5 @@
 streamlit
 crewai
-ddgs
+duckduckgo-search
 python-dotenv
 pysqlite3-binary
