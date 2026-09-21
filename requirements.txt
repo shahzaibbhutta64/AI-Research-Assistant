@@ -1,7 +1,5 @@
 streamlit
 crewai
-crewai-tools
-langchain-community
 ddgs
 python-dotenv
 pysqlite3-binary
