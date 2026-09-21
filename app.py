@@ -16,7 +16,8 @@ load_dotenv()
 
 # Imports from CrewAI
 from crewai import Agent, Task, Crew, Process, LLM
-from crewai_tools import DuckDuckGoSearchTool
+from crewai.tools import tool
+from duckduckgo_search import DDGS
 
 # -------------------------------------------------------------------
 # Page Configuration
@@ -28,6 +29,31 @@ st.set_page_config(
 )
 
 # -------------------------------------------------------------------
+# Custom DuckDuckGo Search Tool
+# -------------------------------------------------------------------
+@tool("DuckDuckGo Web Search")
+def ddgs_search_tool(query: str) -> str:
+    """
+    Searches the web using DuckDuckGo to gather current facts, news, and details.
+    Input should be a clear search query string.
+    """
+    try:
+        results = DDGS().text(keywords=query, max_results=5)
+        if not results:
+            return "No relevant search results found."
+        
+        formatted_results = []
+        for i, res in enumerate(results, 1):
+            title = res.get('title', 'No Title')
+            href = res.get('href', 'No Link')
+            body = res.get('body', 'No Description')
+            formatted_results.append(f"{i}. {title}\n   URL: {href}\n   Snippet: {body}")
+            
+        return "\n\n".join(formatted_results)
+    except Exception as e:
+        return f"Search execution error: {str(e)}"
+
+# -------------------------------------------------------------------
 # Helper: Get API Key safely
 # -------------------------------------------------------------------
 def get_groq_api_key():
@@ -35,11 +61,9 @@ def get_groq_api_key():
     Retrieves the Groq API Key from Streamlit Secrets (Cloud Deployment)
     or Environment Variables (Local Development).
     """
-    # Check Streamlit Secrets first (Streamlit Community Cloud)
     if "GROQ_API_KEY" in st.secrets and st.secrets["GROQ_API_KEY"]:
         return st.secrets["GROQ_API_KEY"]
     
-    # Check Environment Variables (.env)
     env_key = os.getenv("GROQ_API_KEY")
     if env_key:
         return env_key
@@ -55,9 +79,6 @@ def run_research_crew(topic: str, api_key: str) -> str:
     """
     os.environ["GROQ_API_KEY"] = api_key
 
-    # Native CrewAI DuckDuckGo Search Tool
-    search_tool = DuckDuckGoSearchTool()
-
     # Initialize Groq LLM using CrewAI's Native LLM wrapper
     llm = LLM(
         model="groq/llama-3.3-70b-versatile",
@@ -68,13 +89,13 @@ def run_research_crew(topic: str, api_key: str) -> str:
     # Define Single Research Agent
     researcher = Agent(
         role="Research Analyst",
-        goal=f"Research '{topic}' thoroughly using current web search results and produce an accurate, detailed report.",
+        goal=f"Research '{topic}' thoroughly using web search results and produce an accurate, detailed report.",
         backstory=(
             "You are a skilled research analyst. Your strength lies in taking a topic, "
             "searching for up-to-date facts using web search tools, analyzing facts objectively, "
             "and synthesizing reliable information into structured, easy-to-read reports with source citations."
         ),
-        tools=[search_tool],
+        tools=[ddgs_search_tool],
         llm=llm,
         verbose=True,
         allow_delegation=False
@@ -85,7 +106,7 @@ def run_research_crew(topic: str, api_key: str) -> str:
         description=(
             f"Conduct comprehensive research on the topic: '{topic}'.\n\n"
             "Steps to follow:\n"
-            "1. Use DuckDuckGo Search to find relevant, reliable information and recent news about the topic.\n"
+            "1. Use DuckDuckGo Web Search to find relevant, reliable information and recent news about the topic.\n"
             "2. Analyze key facts, developments, applications, benefits, challenges, and statistics.\n"
             "3. Organize your research logically.\n"
             "4. Construct a comprehensive report using the exact report structure required."
