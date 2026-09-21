@@ -1,7 +1,7 @@
-streamlit==1.38.0
-crewai==0.65.0
-crewai-tools==0.12.0
-langchain-community==0.2.16
-duckduckgo-search==6.2.11
-python-dotenv==1.0.1
-pysqlite3-binary==0.5.3
+streamlit
+crewai
+crewai-tools
+langchain-community
+duckduckgo-search
+python-dotenv
+pysqlite3-binary
