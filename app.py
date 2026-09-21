@@ -11,10 +11,8 @@ import os
 import streamlit as st
 from dotenv import load_dotenv
 
-# Load local .env file if available (for local testing)
 load_dotenv()
 
-# Imports from CrewAI and LangChain
 from crewai import Agent, Task, Crew, Process, LLM
 from langchain_community.tools import DuckDuckGoSearchRun
 
