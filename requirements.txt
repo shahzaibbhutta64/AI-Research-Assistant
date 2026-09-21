@@ -2,6 +2,6 @@ streamlit
 crewai
 crewai-tools
 langchain-community
-duckduckgo-search
+ddgs
 python-dotenv
 pysqlite3-binary
