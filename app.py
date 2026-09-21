@@ -1,3 +1,20 @@
+# --- SQLite Fix for Streamlit Cloud ---
+__import__('pysqlite3')
+import sys
+sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+# --------------------------------------
+
+import os
+import streamlit as st
+from dotenv import load_dotenv
+
+# Load local .env file if available
+load_dotenv()
+
+from crewai import Agent, Task, Crew, Process, LLM
+from langchain_community.tools import DuckDuckGoSearchRun
+
+# ... REST OF YOUR CODE ...
 import os
 import streamlit as st
 from dotenv import load_dotenv
