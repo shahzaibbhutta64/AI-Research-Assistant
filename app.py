@@ -1,20 +1,20 @@
-# --- SQLite Fix for Streamlit Cloud (MUST BE AT TOP) ---
+# --- SQLite Patch for Streamlit Cloud (MUST BE AT VERY TOP) ---
 try:
     __import__('pysqlite3')
     import sys
     sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 except ImportError:
     pass
-# -------------------------------------------------------
+# --------------------------------------------------------------
 
 import os
 import streamlit as st
 from dotenv import load_dotenv
 
-# Load local .env file if available (for local testing)
+# Load local .env file if available (for local execution)
 load_dotenv()
 
-# Imports from CrewAI
+# CrewAI Imports
 from crewai import Agent, Task, Crew, Process, LLM
 from crewai.tools import tool
 from duckduckgo_search import DDGS
@@ -38,7 +38,7 @@ def ddgs_search_tool(query: str) -> str:
     Input should be a clear search query string.
     """
     try:
-        results = DDGS().text(keywords=query, max_results=5)
+        results = list(DDGS().text(keywords=query, max_results=5))
         if not results:
             return "No relevant search results found."
         
@@ -54,16 +54,18 @@ def ddgs_search_tool(query: str) -> str:
         return f"Search execution error: {str(e)}"
 
 # -------------------------------------------------------------------
-# Helper: Get API Key safely
+# Helper: Retrieve API Key Safely
 # -------------------------------------------------------------------
 def get_groq_api_key():
     """
     Retrieves the Groq API Key from Streamlit Secrets (Cloud Deployment)
     or Environment Variables (Local Development).
     """
+    # 1. Check Streamlit Secrets (Cloud Deployment)
     if "GROQ_API_KEY" in st.secrets and st.secrets["GROQ_API_KEY"]:
         return st.secrets["GROQ_API_KEY"]
     
+    # 2. Check Local Environment (.env file)
     env_key = os.getenv("GROQ_API_KEY")
     if env_key:
         return env_key
@@ -71,12 +73,13 @@ def get_groq_api_key():
     return None
 
 # -------------------------------------------------------------------
-# Core Research Function
+# Core Research Workflow (CrewAI Execution)
 # -------------------------------------------------------------------
 def run_research_crew(topic: str, api_key: str) -> str:
     """
     Executes the single-agent CrewAI research workflow.
     """
+    # Set environment variable required by internal libraries
     os.environ["GROQ_API_KEY"] = api_key
 
     # Initialize Groq LLM using CrewAI's Native LLM wrapper
