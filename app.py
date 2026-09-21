@@ -11,10 +11,12 @@ import os
 import streamlit as st
 from dotenv import load_dotenv
 
+# Load local .env file if available (for local testing)
 load_dotenv()
 
+# Imports from CrewAI
 from crewai import Agent, Task, Crew, Process, LLM
-from langchain_community.tools import DuckDuckGoSearchRun
+from crewai_tools import DuckDuckGoSearchTool
 
 # -------------------------------------------------------------------
 # Page Configuration
@@ -51,11 +53,10 @@ def run_research_crew(topic: str, api_key: str) -> str:
     """
     Executes the single-agent CrewAI research workflow.
     """
-    # Set environment variable for tools/dependencies requiring it
     os.environ["GROQ_API_KEY"] = api_key
 
-    # Initialize DuckDuckGo Search Tool
-    search_tool = DuckDuckGoSearchRun()
+    # Native CrewAI DuckDuckGo Search Tool
+    search_tool = DuckDuckGoSearchTool()
 
     # Initialize Groq LLM using CrewAI's Native LLM wrapper
     llm = LLM(
@@ -85,9 +86,9 @@ def run_research_crew(topic: str, api_key: str) -> str:
             f"Conduct comprehensive research on the topic: '{topic}'.\n\n"
             "Steps to follow:\n"
             "1. Use DuckDuckGo Search to find relevant, reliable information and recent news about the topic.\n"
-            "2. Analyze the key facts, developments, applications, benefits, challenges, and statistics.\n"
+            "2. Analyze key facts, developments, applications, benefits, challenges, and statistics.\n"
             "3. Organize your research logically.\n"
-            "4. Construct a comprehensive report using the strict report structure required."
+            "4. Construct a comprehensive report using the exact report structure required."
         ),
         expected_output=(
             "A structured markdown research report containing the following exact sections:\n"
@@ -165,7 +166,7 @@ if st.button("Start Research", type="primary"):
                 st.subheader("📊 Generated Research Report")
                 st.markdown(report)
 
-                # Download Buttons
+                # Download Button
                 st.divider()
                 st.download_button(
                     label="📥 Download Report (.md)",
