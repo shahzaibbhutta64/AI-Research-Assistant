@@ -38,7 +38,10 @@ def ddgs_search_tool(query: str) -> str:
     Input should be a clear search query string.
     """
     try:
-        results = list(DDGS().text(keywords=query, max_results=5))
+        # timeout=10 keeps a rate-limited/slow DDG response from hanging the
+        # whole crew run indefinitely -- Streamlit Cloud's shared IPs get
+        # rate-limited by DuckDuckGo more often than a home/dev machine does.
+        results = list(DDGS(timeout=10).text(keywords=query, max_results=5))
         if not results:
             return "No relevant search results found."
         
@@ -51,7 +54,10 @@ def ddgs_search_tool(query: str) -> str:
             
         return "\n\n".join(formatted_results)
     except Exception as e:
-        return f"Search execution error: {str(e)}"
+        # Returned as a normal string (not raised) so the agent sees the
+        # failure as a tool result and can retry or move on, instead of the
+        # whole crew.kickoff() call dying / hanging.
+        return f"Search execution error: {str(e)}. Try a shorter or different query."
 
 # -------------------------------------------------------------------
 # Helper: Retrieve API Key Safely
@@ -97,7 +103,13 @@ def run_research_crew(topic: str, api_key: str) -> str:
         model="openai/openai/gpt-oss-120b",
         base_url="https://api.groq.com/openai/v1",
         api_key=api_key,
-        temperature=0.3
+        temperature=0.3,
+        # gpt-oss-120b is a reasoning model -- it spends tokens "thinking"
+        # before it answers, which is why it's slower than the old
+        # non-reasoning Llama-3.3-70b. "low" trims that thinking budget
+        # for a big latency win; bump to "medium"/"high" if report quality
+        # matters more than speed for your use case.
+        reasoning_effort="low"
     )
 
     # Define Single Research Agent
@@ -112,7 +124,12 @@ def run_research_crew(topic: str, api_key: str) -> str:
         tools=[ddgs_search_tool],
         llm=llm,
         verbose=True,
-        allow_delegation=False
+        allow_delegation=False,
+        # Without these, a confused agent can loop on tool calls (re-running
+        # searches, re-reasoning) far longer than expected with no feedback
+        # to the user. This caps worst-case run time.
+        max_iter=8,
+        max_execution_time=180
     )
 
     # Define Research Task
@@ -191,7 +208,7 @@ if st.button("Start Research", type="primary"):
                 # Progress / Status Indicator
                 with st.status("🚀 Agent is conducting web research...", expanded=True) as status:
                     st.write("🔎 Querying DuckDuckGo for sources...")
-                    st.write("🧠 Analyzing data with Groq Llama-3.3-70b...")
+                    st.write("🧠 Analyzing data with Groq GPT-OSS-120B...")
                     
                     # Execute research
                     report = run_research_crew(topic_input, api_key)
