@@ -82,9 +82,13 @@ def run_research_crew(topic: str, api_key: str) -> str:
     # Set environment variable required by internal libraries
     os.environ["GROQ_API_KEY"] = api_key
 
-    # Initialize Groq LLM using CrewAI's Native LLM wrapper
+    # Initialize Groq LLM via CrewAI's NATIVE "openai" provider, pointed at
+    # Groq's OpenAI-compatible endpoint. This avoids routing through LiteLLM
+    # entirely (the "groq/" prefix requires LiteLLM, which isn't installed
+    # and isn't needed here since Groq speaks the OpenAI API format).
     llm = LLM(
-        model="groq/llama-3.3-70b-versatile",
+        model="openai/llama-3.3-70b-versatile",
+        base_url="https://api.groq.com/openai/v1",
         api_key=api_key,
         temperature=0.3
     )
