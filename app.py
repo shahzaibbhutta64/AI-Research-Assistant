@@ -86,8 +86,15 @@ def run_research_crew(topic: str, api_key: str) -> str:
     # Groq's OpenAI-compatible endpoint. This avoids routing through LiteLLM
     # entirely (the "groq/" prefix requires LiteLLM, which isn't installed
     # and isn't needed here since Groq speaks the OpenAI API format).
+    #
+    # NOTE on the model string: the FIRST "openai/" tells CrewAI to use its
+    # native OpenAI-compatible client. Everything after that is passed
+    # through verbatim as the model name Groq expects. Groq deprecated
+    # llama-3.3-70b-versatile on 2026-08-16 and recommends openai/gpt-oss-120b
+    # as the replacement -- and "openai/gpt-oss-120b" IS the real Groq model
+    # ID (OpenAI is the model's publisher), so the double prefix is correct.
     llm = LLM(
-        model="openai/llama-3.3-70b-versatile",
+        model="openai/openai/gpt-oss-120b",
         base_url="https://api.groq.com/openai/v1",
         api_key=api_key,
         temperature=0.3
@@ -151,7 +158,7 @@ def run_research_crew(topic: str, api_key: str) -> str:
 # Streamlit User Interface
 # -------------------------------------------------------------------
 st.title("🔍 AI Research Agent")
-st.caption("Powered by CrewAI, Groq (Llama-3.3-70b), and DuckDuckGo Search")
+st.caption("Powered by CrewAI, Groq (GPT-OSS-120B), and DuckDuckGo Search")
 
 st.markdown("""
 Enter any topic below. The AI Research Agent will search the web, analyze current information, 
