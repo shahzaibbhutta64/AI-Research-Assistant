@@ -1,5 +1,5 @@
 streamlit
-crewai
+crewai[openai]
 duckduckgo-search
 python-dotenv
 pysqlite3-binary
